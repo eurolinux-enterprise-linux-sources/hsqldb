@@ -40,7 +40,7 @@
 
 Name:		hsqldb
 Version:	1.8.0.10
-Release:	10%{?dist}
+Release:	12%{?dist}
 Epoch:		1
 Summary:	Hsqldb Database Engine
 License:	BSD
@@ -66,13 +66,8 @@ BuildRequires:	ant
 BuildRequires:	junit
 BuildRequires:	jpackage-utils >= 0:1.5
 BuildRequires:	apache-tomcat-apis
-%if %{gcj_support}
 Requires(post): java
 Requires:       java
-%else
-Requires(post): java >= 1:1.6.0
-Requires:       java >= 1:1.6.0
-%endif
 Group:		Applications/Databases
 %if ! %{gcj_support}
 Buildarch:	noarch
@@ -84,7 +79,7 @@ BuildRequires:		java-gcj-compat-devel
 Requires(post):		java-gcj-compat
 Requires(postun):	java-gcj-compat
 %else
-BuildRequires:      java-devel >= 1:1.6.0
+BuildRequires:      java-devel
 %endif
 
 %description
@@ -161,7 +156,7 @@ jdbc-stdext \
 apache-tomcat-apis/tomcat-servlet2.5-api \
 junit)
 pushd build
-ant jar javadoc
+ant -Dant.build.javac.target=1.5 jar javadoc
 popd
 
 %install
@@ -263,7 +258,7 @@ fi
 %{_javadir}/*
 %attr(0755,root,root) %{_bindir}/*
 %attr(0755,root,root) %{_sysconfdir}/rc.d/init.d/%{name}
-%attr(0644,root,root) %{_sysconfdir}/sysconfig/%{name}
+%config(noreplace) %attr(0644,root,root) %{_sysconfdir}/sysconfig/%{name}
 %attr(0755,hsqldb,hsqldb) %{_localstatedir}/lib/%{name}/data
 %{_localstatedir}/lib/%{name}/lib
 %attr(0644,root,root) %{_localstatedir}/lib/%{name}/server.properties
@@ -288,6 +283,14 @@ fi
 %{_datadir}/%{name}
 
 %changelog
+* Mon Aug 12 2013 Mikolaj Izdebski <mizdebsk@redhat.com> - 1:1.8.0.10-12
+- Mark /etc/sysconfig/hsqldb as configuration file
+- Resolves: rhbz#996152
+
+* Wed Jul  3 2013 Mikolaj Izdebski <mizdebsk@redhat.com> - 1:1.8.0.10-11
+- Build with GCJ
+- Resolves: rhbz#962676
+
 * Mon Aug 27 2012 Deepak Bhole <dbhole@redhat.com> - 1.8.0.10-10
 - Resolves: rhbz#827343. Added a post requirement for java
 
