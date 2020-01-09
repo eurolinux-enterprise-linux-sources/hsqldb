@@ -1,0 +1,244 @@
+diff -up hsqldb/build/build.xml.sav hsqldb/build/build.xml
+--- hsqldb/build/build.xml.sav	2012-05-04 13:43:30.000000000 -0400
++++ hsqldb/build/build.xml	2012-05-04 14:56:35.000000000 -0400
+@@ -210,6 +210,7 @@ examples:
+         <arg value="+JAVA2FULL"/>
+         <arg value="-JAVA4"/>
+         <arg value="-JAVA6"/>
++        <arg value="-JAVA7"/>
+        </java>
+     </target>
+ 
+@@ -244,6 +245,7 @@ examples:
+         <arg value="+JAVA2FULL"/>
+         <arg value="+JAVA4"/>
+         <arg value="-JAVA6"/>
++        <arg value="-JAVA7"/>
+        </java>
+     </target>
+ 
+@@ -275,10 +277,12 @@ examples:
+         <arg file="${src}/org/hsqldb/lib/SimpleLog.java"/>
+         <arg file="${src}/org/hsqldb/rowio/RowInputTextLog.java"/>
+         <arg file="${src}/org/hsqldb/HsqlDateTime.java"/>
++		<arg file="${src}/org/hsqldb/jdbcDriver.java"/>
+         <arg value="+JAVA2"/>
+         <arg value="+JAVA2FULL"/>
+         <arg value="+JAVA4"/>
+         <arg value="+JAVA6"/>
++        <arg value="+JAVA7"/>
+       </java>
+     </target>
+ 
+diff -up hsqldb/src/org/hsqldb/jdbcDriver.java.sav hsqldb/src/org/hsqldb/jdbcDriver.java
+--- hsqldb/src/org/hsqldb/jdbcDriver.java.sav	2012-05-04 13:44:26.000000000 -0400
++++ hsqldb/src/org/hsqldb/jdbcDriver.java	2012-05-04 14:25:38.000000000 -0400
+@@ -42,6 +42,13 @@ import org.hsqldb.jdbc.jdbcConnection;
+ import org.hsqldb.persist.HsqlDatabaseProperties;
+ import org.hsqldb.persist.HsqlProperties;
+ 
++//#ifdef JAVA7
++/*
++import java.sql.SQLFeatureNotSupportedException;
++import java.util.logging.Logger;
++*/
++//#endif JAVA7
++
+ // fredt@users 20011220 - patch 1.7.0 by fredt
+ // new version numbering scheme
+ // fredt@users 20020320 - patch 1.7.0 - JDBC 2 support and error trapping
+@@ -321,4 +328,14 @@ public class jdbcDriver implements Drive
+             DriverManager.registerDriver(new jdbcDriver());
+         } catch (Exception e) {}
+     }
++
++//#ifdef JAVA7
++/*
++    public Logger getParentLogger() throws SQLFeatureNotSupportedException
++    {
++        throw new SQLFeatureNotSupportedException("Not supported yet.");
++    }
++*/
++
++//#endif JAVA7
+ }
+diff -up hsqldb/src/org/hsqldb/jdbc/jdbcCallableStatement.java.sav hsqldb/src/org/hsqldb/jdbc/jdbcCallableStatement.java
+--- hsqldb/src/org/hsqldb/jdbc/jdbcCallableStatement.java.sav	2012-05-04 13:43:40.000000000 -0400
++++ hsqldb/src/org/hsqldb/jdbc/jdbcCallableStatement.java	2012-05-04 14:08:51.000000000 -0400
+@@ -3379,4 +3379,20 @@ implements CallableStatement {
+ */
+ 
+ //#endif JAVA6
++
++//#ifdef JAVA7
++/*
++    public <T> T getObject(String columnLabel, Class<T> type) throws SQLException
++    {
++        throw new UnsupportedOperationException("Not supported yet.");
++    }
++
++    public <T> T getObject(int ColumnIndex, Class<T> type) throws SQLException
++    {
++        throw new UnsupportedOperationException("Not supported yet.");
++    }
++
++*/
++
++//#endif JAVA7
+ }
+diff -up hsqldb/src/org/hsqldb/jdbc/jdbcConnection.java.sav hsqldb/src/org/hsqldb/jdbc/jdbcConnection.java
+--- hsqldb/src/org/hsqldb/jdbc/jdbcConnection.java.sav	2012-05-04 13:43:45.000000000 -0400
++++ hsqldb/src/org/hsqldb/jdbc/jdbcConnection.java	2012-05-04 14:21:56.000000000 -0400
+@@ -50,6 +50,14 @@ import java.sql.SQLXML;
+ */
+ 
+ //#endif JAVA6
++
++//#ifdef JAVA7
++/*
++import java.util.concurrent.Executor;
++*/
++
++//#endif JAVA7
++
+ import java.sql.PreparedStatement;
+ import java.sql.SQLException;
+ import java.sql.SQLWarning;
+@@ -2797,4 +2805,33 @@ public class jdbcConnection implements C
+ */
+ 
+ //#endif JAVA6
++
++//#ifdef JAVA7
++/*
++    public int getNetworkTimeout() throws SQLException
++    {
++        throw new UnsupportedOperationException("Not supported yet.");
++    }
++
++    public void setNetworkTimeout(Executor executor, int millis) throws SQLException
++    {
++        throw new UnsupportedOperationException("Not supported yet.");
++    }
++
++    public void abort(Executor executor) throws SQLException
++    {
++        throw new UnsupportedOperationException("Not supported yet.");
++    }
++    
++    public String getSchema() throws SQLException
++    {
++        throw new UnsupportedOperationException("Not supported yet.");
++    }
++
++    public void setSchema(String schema) throws SQLException
++    {
++        throw new UnsupportedOperationException("Not supported yet.");
++    }
++*/
++//#endif JAVA7
+ }
+diff -up hsqldb/src/org/hsqldb/jdbc/jdbcDatabaseMetaData.java.sav hsqldb/src/org/hsqldb/jdbc/jdbcDatabaseMetaData.java
+--- hsqldb/src/org/hsqldb/jdbc/jdbcDatabaseMetaData.java.sav	2012-05-04 13:43:58.000000000 -0400
++++ hsqldb/src/org/hsqldb/jdbc/jdbcDatabaseMetaData.java	2012-05-04 14:22:25.000000000 -0400
+@@ -5697,4 +5697,21 @@ public class jdbcDatabaseMetaData implem
+ */
+ 
+ //#endif JAVA6
++
++//#ifdef JAVA7
++/*
++    public boolean generatedKeyAlwaysReturned() throws SQLException
++    {
++        throw new UnsupportedOperationException("Not supported yet.");
++    }
++
++    public ResultSet getPseudoColumns(String catalog, String schemaPattern,
++                                      String tableNamePattern, String columnNamePattern) throws SQLException
++    {
++        throw new UnsupportedOperationException("Not supported yet.");
++    }
++
++*/
++
++//#endif JAVA7
+ }
+diff -up hsqldb/src/org/hsqldb/jdbc/jdbcDataSource.java.sav hsqldb/src/org/hsqldb/jdbc/jdbcDataSource.java
+--- hsqldb/src/org/hsqldb/jdbc/jdbcDataSource.java.sav	2012-05-04 13:44:04.000000000 -0400
++++ hsqldb/src/org/hsqldb/jdbc/jdbcDataSource.java	2012-05-04 14:23:05.000000000 -0400
+@@ -45,6 +45,14 @@ import javax.naming.StringRefAddr;
+ import javax.sql.DataSource;
+ 
+ //#endif JAVA4
++
++//#ifdef JAVA7
++/*
++import java.sql.SQLFeatureNotSupportedException;
++import java.util.logging.Logger;
++*/
++//#endif JAVA7
++
+ import org.hsqldb.jdbcDriver;
+ 
+ // boucherb@users 20040411 - doc 1.7.2 - javadoc updates toward 1.7.2 final
+@@ -325,4 +333,14 @@ public class jdbcDataSource implements S
+ */
+ 
+ //#endif JAVA6
++
++//#ifdef JAVA7
++/*
++    public Logger getParentLogger() throws SQLFeatureNotSupportedException
++    {
++        throw new SQLFeatureNotSupportedException("Not supported yet.");
++    }
++*/
++
++//#endif JAVA7
+ }
+diff -up hsqldb/src/org/hsqldb/jdbc/jdbcResultSet.java.sav hsqldb/src/org/hsqldb/jdbc/jdbcResultSet.java
+--- hsqldb/src/org/hsqldb/jdbc/jdbcResultSet.java.sav	2012-05-04 13:44:14.000000000 -0400
++++ hsqldb/src/org/hsqldb/jdbc/jdbcResultSet.java	2012-05-04 14:24:36.000000000 -0400
+@@ -5328,4 +5328,20 @@ public class jdbcResultSet implements Re
+ */
+ 
+ //#endif JAVA6
++
++//#ifdef JAVA7
++/*
++
++    public <T> T getObject(String columnLabel, Class<T> type) throws SQLException
++    {
++        throw new UnsupportedOperationException("Not supported yet.");
++    }
++
++    public <T> T getObject(int columnNum, Class<T> type) throws SQLException
++    {
++        throw new UnsupportedOperationException("Not supported yet.");
++    }
++*/
++
++//#endif JAVA7
+ }
+diff -up hsqldb/src/org/hsqldb/jdbc/jdbcStatement.java.sav hsqldb/src/org/hsqldb/jdbc/jdbcStatement.java
+--- hsqldb/src/org/hsqldb/jdbc/jdbcStatement.java.sav	2012-05-04 13:44:19.000000000 -0400
++++ hsqldb/src/org/hsqldb/jdbc/jdbcStatement.java	2012-05-04 14:24:59.000000000 -0400
+@@ -1610,4 +1610,18 @@ public class jdbcStatement implements St
+     }
+ */
+ //#endif JAVA6
++
++//#ifdef JAVA7
++/*
++    public boolean isCloseOnCompletion() throws SQLException
++    {
++        throw new UnsupportedOperationException("Not supported yet.");
++    }
++
++    public void closeOnCompletion() throws SQLException
++    {
++        throw new UnsupportedOperationException("Not supported yet.");
++    }
++*/
++//#endif JAVA7
+ }

@@ -32,13 +32,15 @@
 
 %define gcj_support %{?_with_gcj_support:1}%{!?_with_gcj_support:%{?_without_gcj_support:0}%{!?_without_gcj_support:%{?_gcj_support:%{_gcj_support}}%{!?_gcj_support:0}}}
 
+%define gcj_support 0
+
 %define section		devel
 
 %define cvs_version	1_8_0_10
 
 Name:		hsqldb
 Version:	1.8.0.10
-Release:	8%{?dist}
+Release:	9%{?dist}
 Epoch:		1
 Summary:	Hsqldb Database Engine
 License:	BSD
@@ -54,6 +56,7 @@ Patch1:		hsqldb-tmp.patch
 Patch2:		hsqldb-initscript.patch
 Patch3:		%{name}-1.8.0-bitxor-bitor.patch
 Patch4:		%{name}-1.8.0-autoincrement.patch
+Patch5:		%{name}-1.8.0-jdbc-4.1.patch
 Requires:	apache-tomcat-apis
 Requires(post):	/bin/rm,/bin/ln
 Requires(post):	apache-tomcat-apis
@@ -73,6 +76,8 @@ Buildroot:	%{_tmppath}/%{name}-%{version}-buildroot
 BuildRequires:		java-gcj-compat-devel
 Requires(post):		java-gcj-compat
 Requires(postun):	java-gcj-compat
+%else
+BuildRequires:      java-devel >= 1:1.6.0
 %endif
 
 %description
@@ -138,6 +143,7 @@ chmod -R go=u-w *
 %patch2 -p2
 %patch3 -p8
 %patch4 -p3
+%patch5 -p1
 
 %build
 export CLASSPATH=$(build-classpath \
@@ -275,6 +281,11 @@ fi
 %{_datadir}/%{name}
 
 %changelog
+* Fri May 04 2012 Deepak Bhole <dbhole@redhat.com> - 1.8.0.10-9
+- Added JDBC 4.1 support
+- Made noarch
+- Disabled GCJ support
+
 * Mon Apr 26 2010 Jeff Johnston <jjohnstn@redhat.com> - 1.8.0.10-8
 - Resolves: #585125
 - Additional fixes to hsqldb script.
