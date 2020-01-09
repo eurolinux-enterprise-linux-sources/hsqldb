@@ -40,7 +40,7 @@
 
 Name:		hsqldb
 Version:	1.8.0.10
-Release:	9%{?dist}
+Release:	10%{?dist}
 Epoch:		1
 Summary:	Hsqldb Database Engine
 License:	BSD
@@ -66,6 +66,13 @@ BuildRequires:	ant
 BuildRequires:	junit
 BuildRequires:	jpackage-utils >= 0:1.5
 BuildRequires:	apache-tomcat-apis
+%if %{gcj_support}
+Requires(post): java
+Requires:       java
+%else
+Requires(post): java >= 1:1.6.0
+Requires:       java >= 1:1.6.0
+%endif
 Group:		Applications/Databases
 %if ! %{gcj_support}
 Buildarch:	noarch
@@ -281,6 +288,9 @@ fi
 %{_datadir}/%{name}
 
 %changelog
+* Mon Aug 27 2012 Deepak Bhole <dbhole@redhat.com> - 1.8.0.10-10
+- Resolves: rhbz#827343. Added a post requirement for java
+
 * Fri May 04 2012 Deepak Bhole <dbhole@redhat.com> - 1.8.0.10-9
 - Added JDBC 4.1 support
 - Made noarch
