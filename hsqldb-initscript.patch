@@ -1,0 +1,190 @@
+diff -up ./hsqldb/bin/hsqldb.fix ./hsqldb/bin/hsqldb
+--- ./hsqldb/bin/hsqldb.fix	2010-04-26 13:34:17.000000000 -0400
++++ ./hsqldb/bin/hsqldb	2010-04-26 13:38:09.000000000 -0400
+@@ -101,7 +101,7 @@ INVOC_PATH=`dirname "$0"` || {
+ }
+ [ -n "$INVOC_PATH" ] && INVOC_PATH="${INVOC_PATH}/"
+ 
+-SYNTAX_MSG="SYNTAX:  ${INVOC_PATH}hsqldb start|stop|stopcompact|restart|restartcmpacted|status"
++SYNTAX_MSG="SYNTAX:  ${INVOC_PATH}hsqldb start|stop|stopcompact|restart|restartcmpacted|status|try-restart|force-reload"
+ 
+ # You can override any of these default values in your config file:
+ 
+@@ -179,7 +179,7 @@ done
+ 
+ [ $# -eq 1 ] || {
+     echo "$SYNTAX_MSG" 1>&2
+-    exit 4
++    exit 2
+ }
+ 
+ # It would be nice to permit some uses, like "status" by non-root users,
+@@ -209,11 +209,11 @@ COMMAND="$1"; shift
+ 
+ [ -r "$CFGFILE" ] || {
+     echo "Unable to read config file '$CFGFILE'" 1>&2
+-    exit 2
++    exit 6
+ }
+ [ -f "$CFGFILE" ] || {
+     echo "'$CFGFILE' is not a regular file" 1>&2
+-    exit 2
++    exit 6
+ }
+ HSQLDB_OWNER=
+ JAVA_EXECUTABLE=
+@@ -229,15 +229,15 @@ SERVER_ADDL_CLASSPATH="${SERVER_ADDL_CLA
+ [ -n "$SERVER_HOME" ] || {
+     echo "Config file '$CFGFILE' does not set one or more of following variables
+     JAVA_EXECUTABLE, HSQLDB_JAR_PATH, SERVER_HOME" 1>&2
+-    exit 2
++    exit 6
+ }
+ [ -d "$SERVER_HOME" ] || {
+     echo "SERVER_HOME variable in '$CFGFILE' is set to a non-directory." 1>&2
+-    exit 2
++    exit 6
+ }
+ [ -f "$JAVA_EXECUTABLE" ] && [ -f "$HSQLDB_JAR_PATH" ] || {
+     echo "JAVA_EXECUTABLE or HSQLDB_JAR_PATH in '$CFGFILE' is set to a non-file." 1>&2
+-    exit 2
++    exit 6
+ }
+ 
+ # PROPERTY_FILE is a derived value.
+@@ -246,23 +246,23 @@ case "$TARGET_CLASS" in
+     WebServer) PROPERTY_FILE="$SERVER_HOME"/webserver.properties;;
+     *)
+         echo 'Unsupported value for $TARGET_CLASS:  '"$TARGET_CLASS" 1>&2
+-        exit 2;;
++        exit 6;;
+ esac
+ [ -f "$PROPERTY_FILE" ] || {
+     echo "'$PROPERTY_FILE' is missing" 1>&2
+-    exit 2
++    exit 6
+ }
+ [ -r "$PROPERTY_FILE" ] || {
+     echo "'$PROPERTY_FILE' isn't readable" 1>&2
+-    exit 2
++    exit 6
+ }
+ [ -r "$HSQLDB_JAR_PATH" ] || {
+     echo "'$HSQLDB_JAR_PATH' isn't readable" 1>&2
+-    exit 2
++    exit 6
+ }
+ [ -x "$JAVA_EXECUTABLE" ] || {
+     echo "No Java executable found at '$JAVA_EXECUTABLE'" 1>&2
+-    exit 2
++    exit 6
+ }
+ 
+ # "chown" lives here on some UNIXes.
+@@ -279,15 +279,15 @@ else
+     [ -n "${_AUTH_TEST_PATH}" ] || _AUTH_TEST_PATH="$HOME/sqltool.rc"
+     [ -f "$_AUTH_TEST_PATH" ] || {
+         echo "No auth file found at '$_AUTH_TEST_PATH'" 1>&2
+-        exit 2
++        exit 6
+     }
+     [ -r "$_AUTH_TEST_PATH" ] || {
+         echo "Auth file '$_AUTH_TEST_PATH' not readable" 1>&2
+-        exit 2
++        exit 6
+     }
+     ls -ld "$_AUTH_TEST_PATH" | grep '^-..------' > /dev/null 2>&1 || {
+         echo "Fix permissions on '$_AUTH_TEST_PATH' like 'chmod 600 $_AUTH_TEST_PATH'" 1>&2
+-        exit 2
++        exit 6
+     }
+ fi
+ 
+@@ -315,12 +315,20 @@ HSQLDB_PID=
+         exit 6
+     }
+     kill -0 "$HSQLDB_PID" > /dev/null 2>&1 || {
+-        echo 'Removing stale pid file'
+-        rm -f "$PIDFILE" || {
+-            echo "Failed to remove pid file '$PIDFILE'" 1>&2
+-            exit 6
+-        }
+-        HSQLDB_PID=
++        case "$COMMAND" in
++            status)
++                echo 'Pid file is stale'
++                exit 2
++            ;;
++            *)
++                echo 'Removing stale pid file'
++                rm -f "$PIDFILE" || {
++                    echo "Failed to remove pid file '$PIDFILE'" 1>&2
++                    exit 6
++                }
++                HSQLDB_PID=
++            ;;
++        esac
+     }
+     #echo "PID is ($HSQLDB_PID)"
+ }
+@@ -329,7 +337,7 @@ case "$COMMAND" in
+     status)
+         [ -n "$HSQLDB_PID" ] || {
+             echo "I don't know of any running hsqldb server."
+-            exit 0
++            exit 3
+         }
+         echo "There is an hsqldb server loaded from $HSQLDB_JAR_PATH
+ running with pid $HSQLDB_PID."
+@@ -352,7 +360,7 @@ running with pid $HSQLDB_PID."
+     start)
+         [ -n "$HSQLDB_PID" ] && {
+         echo "There is already a hsqldb server running with pid $HSQLDB_PID." 1>&2
+-            exit 1
++            exit 0
+         }
+         TLS_SWITCHES=
+         [ -n "$TLS_KEYSTORE" ] &&
+@@ -369,7 +377,7 @@ running with pid $HSQLDB_PID."
+             # Some OSes choke if there are newlines in this string.
+             # N.b.!!!  The shell of the -c command is the target user's default
+             # login shell, so keep this command shell-independent!
+-            nohup su "$HSQLDB_OWNER" -c "cd '$SERVER_HOME' && echo "'$$'" > '$PIDFILE' && exec '$JAVA_EXECUTABLE' $SERVER_JVMARGS $TLS_SWITCHES -classpath '${SERVER_ADDL_CLASSPATH}${HSQLDB_JAR_PATH}' org.hsqldb.util.MainInvoker org.hsqldb.$TARGET_CLASS $INVOC_ADDL_ARGS" >> "$LOGFILE" 2>&1 &
++            nohup su "$HSQLDB_OWNER" -s /bin/sh -c "cd '$SERVER_HOME' && echo "'$$'" > '$PIDFILE' && exec '$JAVA_EXECUTABLE' $SERVER_JVMARGS $TLS_SWITCHES -classpath '${SERVER_ADDL_CLASSPATH}${HSQLDB_JAR_PATH}' org.hsqldb.util.MainInvoker org.hsqldb.$TARGET_CLASS $INVOC_ADDL_ARGS" >> "$LOGFILE" 2>&1 &
+         else
+             cd "$SERVER_HOME" || {
+                 echo "Failed to cd to '$SERVER_HOME'" 1>&2
+@@ -437,7 +445,7 @@ See log file '$LOGFILE'." 1>&2
+         [ "$COMMAND" = stopcompact ] && SHUTDOWN_OPTION='compact'
+         [ -n "$HSQLDB_PID" ] || {
+             echo "I don't know of any running hsqldb server." 1>&2
+-            exit 1
++            exit 0
+         }
+         AUTH_FILE_SWITCH=
+         # N.b., there will be a problem if there are special characters or
+@@ -464,7 +472,15 @@ See log file '$LOGFILE'." 1>&2
+         echo "Successful shutdown ${SHUTDOWN_OPTION} (for the $TARGET_CLASS process)!"
+         exit 0
+     ;;
+-    restart|restartcompacted)
++    try-restart)
++        [ -n "$HSQLDB_PID" ] || {
++            exit 0
++        }
++        STOP_COMMAND=stop
++        "${INVOC_PATH}"hsqldb $STOP_COMMAND || exit $?
++        exec "${INVOC_PATH}"/hsqldb start
++    ;;
++    restart|restartcompacted|force-reload)
+         STOP_COMMAND=stop
+         [ "$COMMAND" = restartcompacted ] && STOP_COMMAND=stopcompact
+         "${INVOC_PATH}"hsqldb $STOP_COMMAND || exit $?
+@@ -472,6 +488,6 @@ See log file '$LOGFILE'." 1>&2
+     ;;
+     *)
+         echo "$SYNTAX_MSG" 1>&2
+-        exit 5
++        exit 2
+     ;;
+ esac
