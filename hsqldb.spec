@@ -32,7 +32,7 @@
 
 Name:           hsqldb
 Version:        1.8.1.3
-Release:        13%{?dist}
+Release:        14%{?dist}
 Epoch:          1
 Summary:        HyperSQL Database Engine
 License:        BSD
@@ -70,7 +70,6 @@ Requires:       tomcat-servlet-3.0-api
 Requires(pre):  shadow-utils
 Requires(post): systemd-sysv
 Requires(post): systemd-units
-Requires(preun):  initscripts
 Requires(preun):  systemd-units
 Requires(postun): systemd-units
 
@@ -257,6 +256,11 @@ popd
 %{_datadir}/%{name}
 
 %changelog
+* Thu Oct  8 2015 Mikolaj Izdebski <mizdebsk@redhat.com> - 1:1.8.1.3-14
+- Remove dependency on initscripts
+- Add After=network.target to systemd service
+- Resolves: rhbz#1283893, rhbz#1269717
+
 * Fri Dec 27 2013 Daniel Mach <dmach@redhat.com> - 1:1.8.1.3-13
 - Mass rebuild 2013-12-27
 
