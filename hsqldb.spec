@@ -32,7 +32,7 @@
 
 Name:           hsqldb
 Version:        1.8.1.3
-Release:        12%{?dist}
+Release:        13%{?dist}
 Epoch:          1
 Summary:        HyperSQL Database Engine
 License:        BSD
@@ -257,6 +257,9 @@ popd
 %{_datadir}/%{name}
 
 %changelog
+* Fri Dec 27 2013 Daniel Mach <dmach@redhat.com> - 1:1.8.1.3-13
+- Mass rebuild 2013-12-27
+
 * Fri Jun 28 2013 Mikolaj Izdebski <mizdebsk@redhat.com> - 1:1.8.1.3-12
 - Rebuild to regenerate API documentation
 - Resolves: CVE-2013-1571
